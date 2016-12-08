@@ -272,6 +272,11 @@ class pReMiuMData{
 			_discreteY.insert(_discreteY.begin(),yVec.begin(),yVec.end());
 		}
 
+		/// \brief Set the output vector for the ith subject
+		void discreteY(const unsigned int i, const unsigned int val){
+			_discreteY[i] = val;
+		}
+
 		/// \brief Return the output value for the ith subject
 		unsigned int discreteY(const unsigned int& i) const{
 			if(i>_nSubjects){

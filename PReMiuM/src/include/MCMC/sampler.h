@@ -188,17 +188,17 @@ template<class modelParamType,class optionType,class propParamType,class dataTyp
 		}
 
 		// Full comments with function definition below
-		void model(void (*initialiseParamsFn)(baseGeneratorType&,const mcmcModel<modelParamType,optionType,dataType>&,modelParamType&),
-						vector<double> (*logPostFn)(const modelParamType&,const mcmcModel<modelParamType,optionType,dataType>&));
+		void model(void (*initialiseParamsFn)(baseGeneratorType&,mcmcModel<modelParamType,optionType,dataType>&,modelParamType&),
+						vector<double> (*logPostFn)(const modelParamType&,mcmcModel<modelParamType,optionType,dataType>&));
 
 		// Full comments with function definition below
 		void model(void (*importDataFn)(const string&,const string&,const string&,dataType&),
-						void (*initialiseParamsFn)(baseGeneratorType&,const mcmcModel<modelParamType,optionType,dataType>&,modelParamType&),
-						vector<double> (*logPostFn)(const modelParamType&,const mcmcModel<modelParamType,optionType,dataType>&),
+						void (*initialiseParamsFn)(baseGeneratorType&,mcmcModel<modelParamType,optionType,dataType>&,modelParamType&),
+						vector<double> (*logPostFn)(const modelParamType&,mcmcModel<modelParamType,optionType,dataType>&),
 						const bool&);
 
 		/// \brief Return the mcmc model
-		const mcmcModel<modelParamType,optionType,dataType>& model() const{
+		mcmcModel<modelParamType,optionType,dataType>& model() const{
 			return _model;
 		}
 
@@ -225,7 +225,7 @@ template<class modelParamType,class optionType,class propParamType,class dataTyp
 						const unsigned int& firstSweep,
 						void (*updateFn)(mcmcChain<modelParamType>&,
 										unsigned int&,unsigned int&,
-										const mcmcModel<modelParamType,optionType,dataType>&,
+										mcmcModel<modelParamType,optionType,dataType>&,
 										propParamType&, baseGeneratorType&));
 
 		/// \brief Member function to seed the random number generator
@@ -373,8 +373,8 @@ template<class modelParamType,class optionType,class propParamType,class dataTyp
 /// \param[in] targetFn Pointer to function for evaluating the log posterior
 template<class modelParamType,class optionType,class propParamType,class dataType>
 void mcmcSampler<modelParamType,optionType,propParamType,dataType>::
-	model(void (*initialiseParamsFn)(baseGeneratorType&,const mcmcModel<modelParamType,optionType,dataType>&,modelParamType&),
-				vector<double> (*logPostFn)(const modelParamType&,const mcmcModel<modelParamType,optionType,dataType>&)){
+	model(void (*initialiseParamsFn)(baseGeneratorType&,mcmcModel<modelParamType,optionType,dataType>&,modelParamType&),
+				vector<double> (*logPostFn)(const modelParamType&,mcmcModel<modelParamType,optionType,dataType>&)){
 
 	// Setting up the model associated with the sampler for problems when there
 	// is no data
@@ -402,8 +402,8 @@ void mcmcSampler<modelParamType,optionType,propParamType,dataType>::
 template<class modelParamType,class optionType,class propParamType,class dataType>
 void mcmcSampler<modelParamType,optionType,propParamType,dataType>::
 	model(void (*importDataFn)(const string&,const string&,const string&, dataType&),
-				void (*initialiseParamsFn)(baseGeneratorType&,const mcmcModel<modelParamType,optionType,dataType>&,modelParamType&),
-				vector<double> (*logPostFn)(const modelParamType&,const mcmcModel<modelParamType,optionType,dataType>&),
+				void (*initialiseParamsFn)(baseGeneratorType&,mcmcModel<modelParamType,optionType,dataType>&,modelParamType&),
+				vector<double> (*logPostFn)(const modelParamType&,mcmcModel<modelParamType,optionType,dataType>&),
 				const bool& hasMissingData){
 
 	// Setting up the model associated with the sampler for problems when there
@@ -439,7 +439,7 @@ void mcmcSampler<modelParamType,optionType,propParamType,dataType>::
 				const unsigned int& firstSweep,
 				void (*updateFn)(mcmcChain<modelParamType>&,
 								unsigned int&, unsigned int&,
-								const mcmcModel<modelParamType,optionType,dataType>&,
+								mcmcModel<modelParamType,optionType,dataType>&,
 								propParamType&, baseGeneratorType&)){
 	// Adding a proposal to the sampler
 

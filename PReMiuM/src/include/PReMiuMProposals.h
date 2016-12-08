@@ -740,6 +740,55 @@ class pReMiuMPropParams{
 
 };
 
+// Metropolis-Hastings for updating Y
+void metropolisHastingsForDiscreteY(mcmcChain<pReMiuMParams>& chain,
+									unsigned int& nTry,unsigned int& nAccept,
+									mcmcModel<pReMiuMParams,
+													pReMiuMOptions,
+													pReMiuMData>& model,
+									pReMiuMPropParams& propParams,
+									baseGeneratorType& rndGenerator){
+
+// Need to pass in
+	pReMiuMData& dataset = model.dataset();
+	mcmcState<pReMiuMParams>& currentState = chain.currentState();
+	pReMiuMParams& currentParams = currentState.parameters();
+	pReMiuMHyperParams hyperParams = currentParams.hyperParams();
+	Rprintf("Doing the propsal\n.");
+
+	// Find the number of subjects
+	unsigned int nSubjects = dataset.nSubjects();
+
+  // Define a uniform random number generator
+  randomUniform unifRand(0,1);
+
+	//propose a new coulmn
+
+	// calculate the MH-ratio for this new column
+
+	double logAcceptRatio = -1;
+	if (unifRand(rndGenerator) < exp(logAcceptRatio)){
+		// Move accepted
+		Rprintf("accepye\n.");
+		for (unsigned int j=0; j<= nSubjects; j++){
+			// edit the dataset
+			dataset.discreteY(j, j);
+			// // save the dataset as a parameter too, to allow monitoring
+			currentParams.discreteY(j, j);
+		}
+
+		nAccept++;
+	} else {
+		// Move rejected, reset parameters
+		Rprintf("rej\n.");
+		unsigned int k = 2;
+		for (unsigned int j=0; j<= nSubjects; j++){
+			dataset.discreteY(j, k);
+			currentParams.discreteY(j, k);
+		}
+	}
+}
+
 /*********** BLOCK 1 p(v^A,Theta^A,u|.) **********************************/
 // A=Active, and Theta contains: phi, mu, Tau, gamma, theta
 // We proceed by sampling from p(v^A,Theta^A|.) i.e. marginalising out the u
@@ -754,7 +803,7 @@ class pReMiuMPropParams{
 // leave Theta^A unchanged (thus having an acceptance rate of 1).
 void gibbsForVActive(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMPropParams& propParams,
 				baseGeneratorType& rndGenerator){
 
@@ -797,7 +846,7 @@ void gibbsForVActive(mcmcChain<pReMiuMParams>& chain,
 // Otherwise Metropolis Hastings is used
 void updateForPhiActive(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMPropParams& propParams,
 				baseGeneratorType& rndGenerator){
 
@@ -892,7 +941,7 @@ void updateForPhiActive(mcmcChain<pReMiuMParams>& chain,
 // Gibbs update for mu in Normal covariate case
 void gibbsForMuActive(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMPropParams& propParams,
 				baseGeneratorType& rndGenerator){
 
@@ -977,7 +1026,7 @@ void gibbsForMuActive(mcmcChain<pReMiuMParams>& chain,
 // Gibbs update for mu in Normal covariate case and use of normal inverse prior
 void gibbsForMuActiveNIWP(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMPropParams& propParams,
 				baseGeneratorType& rndGenerator){
 
@@ -1068,7 +1117,7 @@ void gibbsForMuActiveNIWP(mcmcChain<pReMiuMParams>& chain,
 // Gibbs update for Tau in the Normal covariate case
 void gibbsForTauActive(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMPropParams& propParams,
 				baseGeneratorType& rndGenerator){
 
@@ -1128,7 +1177,7 @@ void gibbsForTauActive(mcmcChain<pReMiuMParams>& chain,
 // Gibbs update for update of gamma (only used in the binary variable selection case)
 void gibbsForGammaActive(mcmcChain<pReMiuMParams>& chain,
 					unsigned int& nTry,unsigned int& nAccept,
-					const mcmcModel<pReMiuMParams,
+					mcmcModel<pReMiuMParams,
 									pReMiuMOptions,
 									pReMiuMData>& model,
 					pReMiuMPropParams& propParams,
@@ -1216,7 +1265,7 @@ void gibbsForGammaActive(mcmcChain<pReMiuMParams>& chain,
 // Adaptive Metropolis-Hastings for theta
 void metropolisHastingsForThetaActive(mcmcChain<pReMiuMParams>& chain,
 								unsigned int& nTry,unsigned int& nAccept,
-								const mcmcModel<pReMiuMParams,
+								mcmcModel<pReMiuMParams,
 												pReMiuMOptions,
 												pReMiuMData>& model,
 								pReMiuMPropParams& propParams,
@@ -1288,7 +1337,7 @@ void metropolisHastingsForThetaActive(mcmcChain<pReMiuMParams>& chain,
 // Label switching moves (as recommended in Papaspiliopoulos and Roberts, 2008
 void metropolisHastingsForLabels123(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMPropParams& propParams,
 				baseGeneratorType& rndGenerator){
 
@@ -1431,7 +1480,7 @@ void metropolisHastingsForLabels123(mcmcChain<pReMiuMParams>& chain,
 
 void metropolisHastingsForLabels12(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMPropParams& propParams,
 				baseGeneratorType& rndGenerator){
 
@@ -1517,7 +1566,7 @@ void metropolisHastingsForLabels12(mcmcChain<pReMiuMParams>& chain,
 
 void metropolisHastingsForLabels3(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMPropParams& propParams,
 				baseGeneratorType& rndGenerator){
 
@@ -1617,7 +1666,7 @@ void metropolisHastingsForLabels3(mcmcChain<pReMiuMParams>& chain,
 
 void gibbsForU(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMPropParams& propParams,
 				baseGeneratorType& rndGenerator){
 
@@ -1671,7 +1720,7 @@ void gibbsForU(mcmcChain<pReMiuMParams>& chain,
 // Adaptive Metropolis Hastings move for alpha
 void metropolisHastingsForAlpha(mcmcChain<pReMiuMParams>& chain,
 								unsigned int& nTry,unsigned int& nAccept,
-								const mcmcModel<pReMiuMParams,
+								mcmcModel<pReMiuMParams,
 												pReMiuMOptions,
 												pReMiuMData>& model,
 								pReMiuMPropParams& propParams,
@@ -1746,7 +1795,7 @@ void metropolisHastingsForAlpha(mcmcChain<pReMiuMParams>& chain,
 // needs to be computed here
 void gibbsForVInActive(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMPropParams& propParams,
 				baseGeneratorType& rndGenerator){
 
@@ -1838,7 +1887,7 @@ void gibbsForVInActive(mcmcChain<pReMiuMParams>& chain,
 // Gibbs move for updating phi
 void gibbsForPhiInActive(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMPropParams& propParams,
 				baseGeneratorType& rndGenerator){
 
@@ -1882,7 +1931,7 @@ void gibbsForPhiInActive(mcmcChain<pReMiuMParams>& chain,
 // Gibbs update for mu in Normal covariate case
 void gibbsForMuInActive(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMPropParams& propParams,
 				baseGeneratorType& rndGenerator){
 
@@ -1922,7 +1971,7 @@ void gibbsForMuInActive(mcmcChain<pReMiuMParams>& chain,
 // Gibbs update for mu in Normal covariate case when the normal inerve Whishart prior is used
 void gibbsForMuInActiveNIWP(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMPropParams& propParams,
 				baseGeneratorType& rndGenerator){
 
@@ -1964,7 +2013,7 @@ void gibbsForMuInActiveNIWP(mcmcChain<pReMiuMParams>& chain,
 // Gibbs update for Tau in the Normal covariate case
 void gibbsForTauInActive(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMPropParams& propParams,
 				baseGeneratorType& rndGenerator){
 
@@ -1989,7 +2038,7 @@ void gibbsForTauInActive(mcmcChain<pReMiuMParams>& chain,
 // Gibbs update for update of gamma (only used in the binary variable selection case)
 void gibbsForGammaInActive(mcmcChain<pReMiuMParams>& chain,
 					unsigned int& nTry,unsigned int& nAccept,
-					const mcmcModel<pReMiuMParams,
+					mcmcModel<pReMiuMParams,
 									pReMiuMOptions,
 									pReMiuMData>& model,
 					pReMiuMPropParams& propParams,
@@ -2062,7 +2111,7 @@ void gibbsForGammaInActive(mcmcChain<pReMiuMParams>& chain,
 // Gibbs for theta
 void gibbsForThetaInActive(mcmcChain<pReMiuMParams>& chain,
 								unsigned int& nTry,unsigned int& nAccept,
-								const mcmcModel<pReMiuMParams,
+								mcmcModel<pReMiuMParams,
 												pReMiuMOptions,
 												pReMiuMData>& model,
 								pReMiuMPropParams& propParams,
@@ -2098,7 +2147,7 @@ void gibbsForThetaInActive(mcmcChain<pReMiuMParams>& chain,
 // Gibbs for nu inactive (for survival case)
 void gibbsForNuInActive(mcmcChain<pReMiuMParams>& chain,
 								unsigned int& nTry,unsigned int& nAccept,
-								const mcmcModel<pReMiuMParams,
+								mcmcModel<pReMiuMParams,
 												pReMiuMOptions,
 												pReMiuMData>& model,
 								pReMiuMPropParams& propParams,
@@ -2135,7 +2184,7 @@ void gibbsForNuInActive(mcmcChain<pReMiuMParams>& chain,
 // Adaptive Metropolis-Hastings for beta
 void metropolisHastingsForBeta(mcmcChain<pReMiuMParams>& chain,
 								unsigned int& nTry,unsigned int& nAccept,
-								const mcmcModel<pReMiuMParams,
+								mcmcModel<pReMiuMParams,
 												pReMiuMOptions,
 												pReMiuMData>& model,
 								pReMiuMPropParams& propParams,
@@ -2206,7 +2255,7 @@ void metropolisHastingsForBeta(mcmcChain<pReMiuMParams>& chain,
 // Adaptive Metropolis-Hastings for lambda
 void metropolisHastingsForLambda(mcmcChain<pReMiuMParams>& chain,
 								unsigned int& nTry,unsigned int& nAccept,
-								const mcmcModel<pReMiuMParams,
+								mcmcModel<pReMiuMParams,
 												pReMiuMOptions,
 												pReMiuMData>& model,
 								pReMiuMPropParams& propParams,
@@ -2229,7 +2278,7 @@ void metropolisHastingsForLambda(mcmcChain<pReMiuMParams>& chain,
 	unsigned int lambdaUpdateFreq = propParams.lambdaUpdateFreq();
 
 	double (*logCondPostLambdai)(const pReMiuMParams&,
-											const mcmcModel<pReMiuMParams,
+											mcmcModel<pReMiuMParams,
 															pReMiuMOptions,
 															pReMiuMData>&,
 											const unsigned int&) = NULL;
@@ -2291,7 +2340,7 @@ void metropolisHastingsForLambda(mcmcChain<pReMiuMParams>& chain,
 // Gibbs update for the precision of extra variation epsilon
 void gibbsForTauEpsilon(mcmcChain<pReMiuMParams>& chain,
 						unsigned int& nTry,unsigned int& nAccept,
-						const mcmcModel<pReMiuMParams,
+						mcmcModel<pReMiuMParams,
 										pReMiuMOptions,
 										pReMiuMData>& model,
 						pReMiuMPropParams& propParams,
@@ -2338,7 +2387,7 @@ void gibbsForTauEpsilon(mcmcChain<pReMiuMParams>& chain,
 // Metropolis-Hastings for joint uptdate of rho and omega
 void metropolisHastingsForRhoOmega(mcmcChain<pReMiuMParams>& chain,
 									unsigned int& nTry,unsigned int& nAccept,
-									const mcmcModel<pReMiuMParams,
+									mcmcModel<pReMiuMParams,
 													pReMiuMOptions,
 													pReMiuMData>& model,
 									pReMiuMPropParams& propParams,
@@ -2479,7 +2528,7 @@ void metropolisHastingsForRhoOmega(mcmcChain<pReMiuMParams>& chain,
 // Gibbs for update of sigmaSqY (Normal response case)
 void gibbsForSigmaSqY(mcmcChain<pReMiuMParams>& chain,
 						unsigned int& nTry,unsigned int& nAccept,
-						const mcmcModel<pReMiuMParams,
+						mcmcModel<pReMiuMParams,
 										pReMiuMOptions,
 										pReMiuMData>& model,
 						pReMiuMPropParams& propParams,
@@ -2521,7 +2570,7 @@ void gibbsForSigmaSqY(mcmcChain<pReMiuMParams>& chain,
 // Gibbs for update of sigmaSqYQuantile (Quantile response case)
 void gibbsForSigmaSqYQuantile(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams, pReMiuMOptions, pReMiuMData>& model, pReMiuMPropParams& 					propParams, baseGeneratorType& rndGenerator){
+				mcmcModel<pReMiuMParams, pReMiuMOptions, pReMiuMData>& model, pReMiuMPropParams& 					propParams, baseGeneratorType& rndGenerator){
 	mcmcState<pReMiuMParams>& currentState = chain.currentState();
 	pReMiuMParams& currentParams = currentState.parameters();
 	pReMiuMHyperParams hyperParams = currentParams.hyperParams();
@@ -2559,7 +2608,7 @@ void gibbsForSigmaSqYQuantile(mcmcChain<pReMiuMParams>& chain,
 // Gibbs for update of nu (survival response case) using adaptive rejection sampling
 void gibbsForNu(mcmcChain<pReMiuMParams>& chain,
 		unsigned int& nTry,unsigned int& nAccept,
-		const mcmcModel<pReMiuMParams,
+		mcmcModel<pReMiuMParams,
 		pReMiuMOptions,
 		pReMiuMData>& model,
 		pReMiuMPropParams& propParams,
@@ -2589,7 +2638,7 @@ void gibbsForNu(mcmcChain<pReMiuMParams>& chain,
 // Gibbs update for the precision of spatial random term
 void gibbsForTauCAR(mcmcChain<pReMiuMParams>& chain,
 						unsigned int& nTry,unsigned int& nAccept,
-						const mcmcModel<pReMiuMParams,
+						mcmcModel<pReMiuMParams,
 										pReMiuMOptions,
 										pReMiuMData>& model,
 						pReMiuMPropParams& propParams,
@@ -2637,7 +2686,7 @@ void gibbsForTauCAR(mcmcChain<pReMiuMParams>& chain,
 // Gibbs update for spatial random term using adaptive rejection sampling
 void gibbsForUCAR(mcmcChain<pReMiuMParams>& chain,
 						unsigned int& nTry,unsigned int& nAccept,
-						const mcmcModel<pReMiuMParams,
+						mcmcModel<pReMiuMParams,
 										pReMiuMOptions,
 										pReMiuMData>& model,
 						pReMiuMPropParams& propParams,
@@ -2697,7 +2746,7 @@ void gibbsForUCAR(mcmcChain<pReMiuMParams>& chain,
 // Gibbs update for the allocation variables
 void gibbsForZ(mcmcChain<pReMiuMParams>& chain,
 				unsigned int& nTry,unsigned int& nAccept,
-				const mcmcModel<pReMiuMParams,
+				mcmcModel<pReMiuMParams,
 								pReMiuMOptions,
 								pReMiuMData>& model,
 				pReMiuMPropParams& propParams,

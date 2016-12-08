@@ -88,7 +88,7 @@ template<class modelParamType,class optionType,class propParamType,class dataTyp
 		void updateFunction(void (*f)(mcmcChain<modelParamType>&,
 										unsigned int&,
 										unsigned int&,
-										const mcmcModel<modelParamType,optionType,dataType>&,
+										mcmcModel<modelParamType,optionType,dataType>&,
 										propParamType&,
 										baseGeneratorType&)){
 			_updateParameters=f;
@@ -126,7 +126,7 @@ template<class modelParamType,class optionType,class propParamType,class dataTyp
 		/// \param[in,out] chain A reference to the mcmcChain
 		/// \param[in] rndGenerator A boost random number generator object
 		void updateParameters(mcmcChain<modelParamType>& chain,
-							  const mcmcModel<modelParamType,optionType,dataType>& model,
+							  mcmcModel<modelParamType,optionType,dataType>& model,
 										baseGeneratorType& rndGenerator){
 
 			// Use the user function to propose some new parameters
@@ -175,7 +175,7 @@ template<class modelParamType,class optionType,class propParamType,class dataTyp
 		void (*_updateParameters)(mcmcChain<modelParamType>&,
 								unsigned int &,
 								unsigned int&,
-								const mcmcModel<modelParamType,optionType,dataType>&,
+								mcmcModel<modelParamType,optionType,dataType>&,
 								propParamType&,
 								baseGeneratorType&);
 

@@ -27,9 +27,9 @@ using namespace std;
 
 // Adaptive rejection sampler for spatial CAR model
 double ARSsampleCAR(pReMiuMParams params,
-                 const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+                 mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
                  const unsigned int& iSub,
-                 void (*evalhxhprimax)(const pReMiuMParams&,const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>&, const unsigned int&,const double&, double*, double*),
+                 void (*evalhxhprimax)(const pReMiuMParams&,mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>&, const unsigned int&,const double&, double*, double*),
                  baseGeneratorType& rndGenerator)
 {
 	//initialise sampler
@@ -87,9 +87,9 @@ double ARSsampleCAR(pReMiuMParams params,
 }
 
 double ARSsampleNu(pReMiuMParams params,
-                 const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+                 mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
                  const unsigned int& cluster,
-                 void (*evalhxhprimax)(const pReMiuMParams&,const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>&, const unsigned int&,const double&, double*, double*),
+                 void (*evalhxhprimax)(const pReMiuMParams&,mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>&, const unsigned int&,const double&, double*, double*),
                  baseGeneratorType& rndGenerator)
 {
 	//initialise sampler

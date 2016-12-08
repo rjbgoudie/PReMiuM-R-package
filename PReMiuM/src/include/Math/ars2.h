@@ -681,9 +681,9 @@ void spl1_(const int *ns, int *n,       int *ilow,      int *ihigh,      int *ip
 	       const int *lb, double *xlb,  double *hulb,    const int *ub,  double *xub,  double *huub, double *beta,  int *ifault,  const double *emax,
            const  double *eps,  double *alcu,
            pReMiuMParams params,
-           const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+           mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
            const unsigned int& iSub,
-           void (*evalhxhprimax)(const pReMiuMParams&,const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>&, const unsigned int&, const double&, double*, double*),
+           void (*evalhxhprimax)(const pReMiuMParams&,mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>&, const unsigned int&, const double&, double*, double*),
            baseGeneratorType& rndGenerator)
 	{
 	const int max_attempt = 3*(*ns);     // maximal number of attempts to sample a value
@@ -787,9 +787,9 @@ void spl1_(const int *ns, int *n,       int *ilow,      int *ihigh,      int *ip
 
    void sample_(int *iwv, double *rwv, double *beta, int *ifault,
              pReMiuMParams params,
-             const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+             mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
              const unsigned int& iSub,
-             void (*evalhxhprimax)(const pReMiuMParams&,const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>&, const unsigned int&,const double&, double*, double*),
+             void (*evalhxhprimax)(const pReMiuMParams&,mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>&, const unsigned int&,const double&, double*, double*),
              baseGeneratorType& rndGenerator)
 {
     static int iipt, ihpx, ihuz, iscum;

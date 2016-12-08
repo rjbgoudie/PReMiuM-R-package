@@ -108,6 +108,9 @@ RcppExport SEXP profRegr(SEXP inputString) {
 										dataset.nFixedEffects(),dataset.nCategoriesY());
 	pReMiuMSampler.proposalParams(proposalParams);
 
+	// need to add condition for when this is needed
+	pReMiuMSampler.addProposal("metropolisHastingsForDiscreteY",1.0,1,1,&metropolisHastingsForDiscreteY);
+
 	// The gibbs update for the active V
 	pReMiuMSampler.addProposal("gibbsForVActive",1.0,1,1,&gibbsForVActive);
 

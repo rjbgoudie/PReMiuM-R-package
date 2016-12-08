@@ -104,7 +104,7 @@ template<class modelParamType,class optionType,class dataType = vector<int> > cl
 		///	initialising parameters
 		/// \param[in] *f Pointer to a function for initialising the parameters
 		void initialiseParamsFunction(void (*f)(baseGeneratorType&,
-											const mcmcModel<modelParamType,optionType,dataType>&
+											mcmcModel<modelParamType,optionType,dataType>&
 											,modelParamType&)){
 			_initialiseParams=f;
 		}
@@ -114,7 +114,7 @@ template<class modelParamType,class optionType,class dataType = vector<int> > cl
 		/// \param[in] *f Pointer to a function for calculating the log
 		///	Posterior given the current model parameters and data
 		void logPosteriorFunction(vector<double> (*f)(const modelParamType&,
-													const mcmcModel<modelParamType,optionType,dataType>&)){
+													mcmcModel<modelParamType,optionType,dataType>&)){
 			_logPosterior=f;
 		}
 
@@ -149,7 +149,7 @@ template<class modelParamType,class optionType,class dataType = vector<int> > cl
 		/// \return A vector containing the log posterior in the first element,
 		/// the log likelihood in the second element and the log prior in the
 		/// third element. For problems with no data the last two elements are 0
-		vector<double> logPosterior(const modelParamType& parameters) const{
+		vector<double> logPosterior(const modelParamType& parameters){
 			return (*_logPosterior)(parameters,*this);
 		}
 
@@ -172,12 +172,12 @@ template<class modelParamType,class optionType,class dataType = vector<int> > cl
 
 		/// \brief Pointer to function for initialising the parameters given a
 		/// random number generator and a dataset
-		void (*_initialiseParams)(baseGeneratorType& rndGenerator,const mcmcModel<modelParamType,optionType,dataType>&,modelParamType&);
+		void (*_initialiseParams)(baseGeneratorType& rndGenerator,mcmcModel<modelParamType,optionType,dataType>&,modelParamType&);
 
 
 		/// \brief Pointer to function for calculating the log posterior when
 		/// there is data
-		vector<double> (*_logPosterior)(const modelParamType&, const mcmcModel<modelParamType,optionType,dataType>&);
+		vector<double> (*_logPosterior)(const modelParamType&, mcmcModel<modelParamType,optionType,dataType>&);
 
 
 };

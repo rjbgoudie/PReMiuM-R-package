@@ -731,6 +731,7 @@ class pReMiuMParams{
 				}
 			}
 
+			_discreteY.resize(nSubjects);
 			_theta.resize(maxNClusters);
 			for (unsigned int c=0;c<maxNClusters;c++){
 				_theta[c].resize(nCategoriesY);
@@ -899,6 +900,20 @@ class pReMiuMParams{
 		/// \brief Return the number of categories of outcome Y for Categorical outcome
 		unsigned int nCategoriesY() const{
 			return _theta[0].size();
+		}
+
+		/// \brief Get the current discrete Y
+		vector<int> discreteY() const{
+			return _discreteY;
+		}
+
+		/// \brief Get the current discrete Y for indiv j
+		int discreteY(const unsigned int j) const{
+			return _discreteY[j];
+		}
+
+		void discreteY(const unsigned int& j, const unsigned int& discreteYVal){
+			_discreteY[j]=discreteYVal;
 		}
 
 		/// \brief Return the number of clusters
@@ -1916,6 +1931,7 @@ class pReMiuMParams{
 		/// \brief Copy operator
 		pReMiuMParams& operator=(const pReMiuMParams& params){
 			_maxNClusters=params.maxNClusters();
+			_discreteY = params.discreteY();
 			_logPsi = params.logPsi();
 			_u = params.u();
 			_v = params.v();
@@ -1961,6 +1977,9 @@ class pReMiuMParams{
 	private:
 		/// \brief The current maximum number of clusters
 		unsigned int _maxNClusters;
+
+		/// \brief A vector of the Y data
+		vector<int> _discreteY;
 
 		/// \brief Vector of probabilities of assignment to clusters
 		vector<double> _logPsi;
@@ -2271,7 +2290,7 @@ double logPYiGivenZiWiSurvival(const pReMiuMParams& params, const pReMiuMData& d
 
 
 vector<double> pReMiuMLogPost(const pReMiuMParams& params,
-								const mcmcModel<pReMiuMParams,
+								mcmcModel<pReMiuMParams,
 												pReMiuMOptions,
 												pReMiuMData>& model){
 
@@ -2555,7 +2574,7 @@ vector<double> pReMiuMLogPost(const pReMiuMParams& params,
 
 // Log conditional posterior for phi (only used in continuous variable selection)
 double logCondPostPhicj(const pReMiuMParams& params,
-						const mcmcModel<pReMiuMParams,
+						mcmcModel<pReMiuMParams,
 										pReMiuMOptions,
 										pReMiuMData>& model,
 						const unsigned int& c,
@@ -2589,7 +2608,7 @@ double logCondPostPhicj(const pReMiuMParams& params,
 
 // Log conditional posterior for rho and omega (only used in variable selection)
 double logCondPostRhoOmegaj(const pReMiuMParams& params,
-						const mcmcModel<pReMiuMParams,
+						mcmcModel<pReMiuMParams,
 										pReMiuMOptions,
 										pReMiuMData>& model,
 						const unsigned int& j){
@@ -2640,7 +2659,7 @@ double logCondPostRhoOmegaj(const pReMiuMParams& params,
 }
 
 double logCondPostThetaBeta(const pReMiuMParams& params,
-							const mcmcModel<pReMiuMParams,
+							mcmcModel<pReMiuMParams,
 											pReMiuMOptions,
 											pReMiuMData>& model){
 
@@ -2765,7 +2784,7 @@ double logCondPostThetaBeta(const pReMiuMParams& params,
 }
 
 double logCondPostLambdaiBernoulli(const pReMiuMParams& params,
-								const mcmcModel<pReMiuMParams,
+								mcmcModel<pReMiuMParams,
 												pReMiuMOptions,
 												pReMiuMData>& model,
 								const unsigned int& i){
@@ -2784,7 +2803,7 @@ double logCondPostLambdaiBernoulli(const pReMiuMParams& params,
 }
 
 double logCondPostLambdaiBinomial(const pReMiuMParams& params,
-								const mcmcModel<pReMiuMParams,
+								mcmcModel<pReMiuMParams,
 												pReMiuMOptions,
 												pReMiuMData>& model,
 								const unsigned int& i){
@@ -2803,7 +2822,7 @@ double logCondPostLambdaiBinomial(const pReMiuMParams& params,
 }
 
 double logCondPostLambdaiPoisson(const pReMiuMParams& params,
-								const mcmcModel<pReMiuMParams,
+								mcmcModel<pReMiuMParams,
 												pReMiuMOptions,
 												pReMiuMData>& model,
 								const unsigned int& i){
@@ -2826,7 +2845,7 @@ double logCondPostLambdaiPoisson(const pReMiuMParams& params,
 
 // Evaluation log of conditional density of U_i given U_{-i} and Y for adaptive rejection
 void logUiPostPoissonSpatial(const pReMiuMParams& params,
-                                 const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+                                 mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
                                  const unsigned int& iSub,
                                  const double& x,
                                  double* Pt_y1, double* Pt_y2){
@@ -2862,7 +2881,7 @@ void logUiPostPoissonSpatial(const pReMiuMParams& params,
 // Evaluation log of conditional density of \nu (shape parameter of Weibull for Survival response) 
 // given \gamma for adaptive rejection sampling
 void logNuPostSurvival(const pReMiuMParams& params,
-                                 const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+                                 mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
                                  const unsigned int& cluster,
                                  const double& x,
                                  double* Pt_y1, double* Pt_y2){
@@ -2934,7 +2953,7 @@ void logNuPostSurvival(const pReMiuMParams& params,
 
 
 //void EvalHXHPrimaXPoissonSpatial(const pReMiuMParams& params,
-//                                 const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+//                                 mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 //                                 const unsigned int& iSub,
 //                                 const double& x,
 //                                 double* Pt_y1, double* Pt_y2){

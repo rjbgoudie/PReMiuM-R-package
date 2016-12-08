@@ -872,7 +872,7 @@ void readHyperParamsFromFile(const string& filename,pReMiuMHyperParams& hyperPar
 // Initialise the PReMiuM object (needed in this file as it calls
 // function to read hyper parameters)
 void initialisePReMiuM(baseGeneratorType& rndGenerator,
-				const mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
+				mcmcModel<pReMiuMParams,pReMiuMOptions,pReMiuMData>& model,
 				pReMiuMParams& params){
 
 	const pReMiuMData& dataset = model.dataset();
@@ -1652,6 +1652,8 @@ void writePReMiuMOutput(mcmcSampler<pReMiuMParams,pReMiuMOptions,pReMiuMPropPara
 					outFiles.push_back(new ofstream(fileName.c_str()));
 				}
 			}
+			fileName = fileStem + "_discreteY.txt";
+			outFiles.push_back(new ofstream(fileName.c_str()));
 		}
 
 		// File indices
@@ -1662,6 +1664,7 @@ void writePReMiuMOutput(mcmcSampler<pReMiuMParams,pReMiuMOptions,pReMiuMPropPara
 		int rhoOmegaPropInd=-1,gammaInd=-1,nullPhiInd=-1,nullMuInd=-1;
 		int predictThetaRaoBlackwellInd=-1;
 		int TauCARInd=-1,uCARInd=-1;
+		int discreteYInd=-1;
 
 		int r=0;
 		nClustersInd=r++;
@@ -1726,7 +1729,7 @@ void writePReMiuMOutput(mcmcSampler<pReMiuMParams,pReMiuMOptions,pReMiuMPropPara
 				nullMuInd=r++;
 			}
 		}
-
+		discreteYInd=r++;
 
 		*(outFiles[nClustersInd]) << maxNClusters << endl;
 
@@ -1975,6 +1978,16 @@ void writePReMiuMOutput(mcmcSampler<pReMiuMParams,pReMiuMOptions,pReMiuMPropPara
 		*(outFiles[logPostInd]) << sampler.chain().currentState().logPosterior() << " ";
 		*(outFiles[logPostInd]) << sampler.chain().currentState().logLikelihood() << " ";
 		*(outFiles[logPostInd]) << sampler.chain().currentState().logPrior() << endl;
+
+		for(unsigned int i=0;i<nSubjects;i++){
+			double discreteYi = params.discreteY(i);
+			*(outFiles[discreteYInd]) << discreteYi;
+			if(i<nSubjects-1){
+				*(outFiles[discreteYInd]) << " ";
+			}else{
+				*(outFiles[discreteYInd]) << endl;
+			}
+		}
 
 		bool anyUpdates;
 		if(includeResponse){
