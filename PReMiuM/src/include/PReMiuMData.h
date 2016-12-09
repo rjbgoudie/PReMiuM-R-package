@@ -46,7 +46,7 @@ class pReMiuMData{
 
 	public:
 		/// \brief Default constructor
-		pReMiuMData(): _nSubjects(0), _nCovariates(0), _nFixedEffects(0), _nCategoriesY(0), _nPredictSubjects(0) {};
+		pReMiuMData(): _nSubjects(0), _nCovariates(0), _nStageOne(0), _nFixedEffects(0), _nCategoriesY(0), _nPredictSubjects(0) {};
 
 		/// \brief Default destructor
 		~pReMiuMData(){};
@@ -68,6 +68,18 @@ class pReMiuMData{
 
 		unsigned int size() const{
 			return _nSubjects;
+		}
+
+		/// \brief Return the number of stage one iterations. This is the number of
+		/// different choices for the outcome variable Y
+		unsigned int& nStageOne(){
+			return _nStageOne;
+		}
+
+		/// \brief Set the number of covariates. This is the number of different
+		/// choices for the outcome variable Y
+		void nStageOne(const unsigned int& nStageOne){
+			_nStageOne = nStageOne;
 		}
 
 		/// \brief Return the number of covariates
@@ -330,6 +342,22 @@ class pReMiuMData{
 			_discreteX[i][j]=x;
 		}
 
+		/// \brief Return the matrix of stage one samples. That is, a matrix of
+		/// values that are the possible values for the outcome variable Y
+		vector<vector<int> >& discreteYStageOne(){
+			return _discreteYStageOne;
+		}
+
+		/// \brief Return the jth stage one sample for the ith individual
+		int discreteYStageOne(const unsigned int& i,const unsigned int& j) const{
+			return _discreteYStageOne[i][j];
+		}
+
+		/// \brief Set the jth stage one sample for the ith individual
+		void discreteYStageOne(const unsigned int& i,const unsigned int& j,const int& x){
+			_discreteYStageOne[i][j]=x;
+		}
+
 		/// \brief Return the covariate matrix
 		const vector<vector<double> >& continuousX() const{
 			return _continuousX;
@@ -515,6 +543,9 @@ class pReMiuMData{
 		/// \brief The number of discrete covariates
 		unsigned int _nDiscreteCovs;
 
+		/// \brief The number of stage one samples
+		unsigned int _nStageOne;
+
 		/// \brief The number of continuous covariates
 		unsigned int _nContinuousCovs;
 
@@ -539,6 +570,11 @@ class pReMiuMData{
 
 		/// \brief A vector of the output variables
 		vector<unsigned int> _discreteY;
+
+		/// \brief A matrix (vector of vectors) of the stage one samples
+		/// \note this is a signed int because missing values are typically stored
+		/// as negative values
+		vector<vector<int> > _discreteYStageOne;
 
 		/// \brief A vector of the output variables
 		vector<double> _continuousY;

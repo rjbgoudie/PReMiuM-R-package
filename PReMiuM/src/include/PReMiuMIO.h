@@ -309,6 +309,7 @@ void importPReMiuMData(const string& fitFilename,const string& predictFilename, 
 	}
 	unsigned int& nSubjects=dataset.nSubjects();
 	unsigned int& nCovariates=dataset.nCovariates();
+	unsigned int& nStageOne=dataset.nStageOne();
 	unsigned int& nDiscreteCovs=dataset.nDiscreteCovs();
 	unsigned int& nContinuousCovs=dataset.nContinuousCovs();
 	unsigned int& nFixedEffects=dataset.nFixedEffects();
@@ -317,6 +318,7 @@ void importPReMiuMData(const string& fitFilename,const string& predictFilename, 
 	vector<unsigned int>& nCategories=dataset.nCategories();
 	vector<unsigned int>& discreteY=dataset.discreteY();
 	vector<double>& continuousY=dataset.continuousY();
+	vector<vector<int> >& discreteYStageOne=dataset.discreteYStageOne();
 	vector<vector<int> >& discreteX=dataset.discreteX();
 	vector<vector<double> >& continuousX=dataset.continuousX();
 	vector<string>& covNames=dataset.covariateNames();
@@ -335,6 +337,7 @@ void importPReMiuMData(const string& fitFilename,const string& predictFilename, 
 
 	bool wasError=false;
 
+	inputFile >> nStageOne;
 	// Get the number of subjects
 	inputFile >> nSubjects;
 	// Get the number of covariates
@@ -402,6 +405,7 @@ void importPReMiuMData(const string& fitFilename,const string& predictFilename, 
 	continuousY.resize(nSubjects);
 	discreteX.resize(nSubjects+nPredictSubjects);
 	continuousX.resize(nSubjects+nPredictSubjects);
+	discreteYStageOne.resize(nSubjects);
 	W.resize(nSubjects);
 	if(outcomeType.compare("Poisson")==0){
 		logOffset.resize(nSubjects);
@@ -420,7 +424,13 @@ void importPReMiuMData(const string& fitFilename,const string& predictFilename, 
 		if(outcomeType.compare("Normal")==0||outcomeType.compare("Survival")==0||outcomeType.compare("Quantile")==0){
 			inputFile >> continuousY[i];
 		}else{
-			inputFile >> discreteY[i];
+			discreteYStageOne[i].resize(nStageOne);
+			for (unsigned int j=0; j < nStageOne; j++){
+				// set the value of the jth stage one value for the ith individual
+				inputFile >> discreteYStageOne[i][j];
+			}
+			// initialise the outcome variable at the first stage one value
+			discreteY[i] = discreteYStageOne[i][0];
 		}
 		if(covariateType.compare("Discrete")==0 || covariateType.compare("Normal")==0){
 			discreteX[i].resize(nCovariates);

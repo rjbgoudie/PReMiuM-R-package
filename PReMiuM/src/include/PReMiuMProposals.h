@@ -748,44 +748,45 @@ void metropolisHastingsForDiscreteY(mcmcChain<pReMiuMParams>& chain,
 													pReMiuMData>& model,
 									pReMiuMPropParams& propParams,
 									baseGeneratorType& rndGenerator){
-
-// Need to pass in
 	pReMiuMData& dataset = model.dataset();
 	mcmcState<pReMiuMParams>& currentState = chain.currentState();
 	pReMiuMParams& currentParams = currentState.parameters();
 	pReMiuMHyperParams hyperParams = currentParams.hyperParams();
-	Rprintf("Doing the propsal\n.");
 
 	// Find the number of subjects
 	unsigned int nSubjects = dataset.nSubjects();
 
-  // Define a uniform random number generator
-  randomUniform unifRand(0,1);
+	unsigned int& nStageOne = dataset.nStageOne();
+	vector<vector<int> >& discreteYStageOne = dataset.discreteYStageOne();
 
-	//propose a new coulmn
+	// Define a uniform random number generator
+	randomUniform unifRand(0,1);
 
-	// calculate the MH-ratio for this new column
+	// Propose a new "column", ie new set of values for Y
+	unsigned int prop_col = (unsigned int)(nStageOne * unifRand(rndGenerator));
 
+	// Still need to calculate the correct MH probability
+	Rprintf("Accepting (incorrectly) with prob 0.36\n");
 	double logAcceptRatio = -1;
+
 	if (unifRand(rndGenerator) < exp(logAcceptRatio)){
 		// Move accepted
-		Rprintf("accepye\n.");
-		for (unsigned int j=0; j<= nSubjects; j++){
-			// edit the dataset
-			dataset.discreteY(j, j);
-			// // save the dataset as a parameter too, to allow monitoring
-			currentParams.discreteY(j, j);
+
+		for (unsigned int i = 0; i < nSubjects; i++){
+			// get value of Y for the ith individual, under the "prop_col"th
+			// stage one
+			int newVal = discreteYStageOne[i][prop_col];
+
+			// set the this as the value in the dataset
+			dataset.discreteY(i, newVal);
+
+			// and as a parameter, to allow monitoring
+			currentParams.discreteY(i, newVal);
 		}
 
 		nAccept++;
 	} else {
-		// Move rejected, reset parameters
-		Rprintf("rej\n.");
-		unsigned int k = 2;
-		for (unsigned int j=0; j<= nSubjects; j++){
-			dataset.discreteY(j, k);
-			currentParams.discreteY(j, k);
-		}
+		// Move rejected, may need to reset parameters if any are changed
 	}
 }
 
@@ -901,6 +902,7 @@ void updateForPhiActive(mcmcChain<pReMiuMParams>& chain,
 					dirichParams[Xij]=dirichParams[Xij]+gammacj;
 				}
 			}
+
 			vector<double> currentLogPhi(nCategories);
 			currentLogPhi=currentParams.logPhi(c,j);
 

@@ -50,12 +50,13 @@ profRegr<-function(covNames, fixedEffectsNames, outcome="outcome", outcomeT=NA, 
 	# make big data matrix with outcome, covariates and fixed effects	
 	# outcome
 	# create outcome if excludeY=TRUE and outcome not provided
-	if (length(which(colnames(data)==outcome))<1&&excludeY==TRUE) {
+	if (length(which(colnames(data) %in% outcome))<1&&excludeY==TRUE) {
 		dataMatrix<-rep(0,dim(data)[1])
 		yModel="Bernoulli" 
 	} else {
-		dataMatrix<-data[,which(colnames(data)==outcome)]
+		dataMatrix<-data[,which(colnames(data) %in% outcome), drop = FALSE]
 	}
+	nStageOne <- ncol(dataMatrix)
 
 	if (sum(is.na(dataMatrix))>0) stop("ERROR: the outcome cannot have missing values. Use the profiles with missing outcome for predictions.")
 
@@ -64,7 +65,7 @@ profRegr<-function(covNames, fixedEffectsNames, outcome="outcome", outcomeT=NA, 
 	# recode outcome covariates
 	if (yModel=="Categorical"||yModel=="Bernoulli"){
 		outcomeY<-dataMatrix
-		outcomeFactor<-as.factor(outcomeY)
+		outcomeFactor<-as.factor(unlist(outcomeY))
 		yLevels<-length(levels(outcomeFactor))
 		if (yModel=="Bernoulli"&yLevels>2) stop("The number of levels of the outcome is greater than 2, which is not allowed for Bernoulli outcome. You might want to set yModel to be Categorical.") 
 		if (yModel=="Categorical") write(yLevels,fileName,append=T,ncolumns=length(yLevels))
@@ -73,14 +74,14 @@ profRegr<-function(covNames, fixedEffectsNames, outcome="outcome", outcomeT=NA, 
 				print("Recoding of the outcome as follows")
 				print(paste("Replacing level ",levels(outcomeFactor)," with ",c(0:(yLevels-1)),sep=""))
 				levels(outcomeFactor)<-c(0:(yLevels-1))
-				dataMatrix<-outcomeFactor
+				dataMatrix<-matrix(as.numeric(as.character(outcomeFactor)), ncol = ncol(dataMatrix))
 			}
 		} else {
 			print("Recoding of the outcome as follows")
 			tmpLevels<-levels(outcomeFactor)
 			print(paste("Replacing level ",levels(outcomeFactor)," with ",c(0:(yLevels-1)),sep=""))
 			levels(outcomeFactor)<-c(0:(yLevels-1))
-			dataMatrix<-outcomeFactor
+			dataMatrix<-matrix(as.numeric(as.character(outcomeFactor)), ncol = ncol(dataMatrix))
 		}
 		if (yModel=="Bernoulli") yLevels <- 1
 	} else {
@@ -102,51 +103,51 @@ profRegr<-function(covNames, fixedEffectsNames, outcome="outcome", outcomeT=NA, 
 	if (xModel=="Discrete"){
 		xLevels<-vector()
 		for (k in 1:nCovariates){
-			tmpCov<-dataMatrix[,(1+k)]
+			tmpCov<-dataMatrix[,(k + nStageOne)]
 			xLevels[k]<-length(levels(as.factor(tmpCov)))	
 			if(is.factor(tmpCov)){
-				print(paste("Recoding of covariate ",colnames(dataMatrix)[k+1]," as follows",sep=""))
+				print(paste("Recoding of covariate ",colnames(dataMatrix)[k + nStageOne]," as follows",sep=""))
 				tmpCovFactor<-as.factor(tmpCov)
 				tmpLevels<-levels(tmpCovFactor)
 				print(paste("Replacing level ",levels(tmpCovFactor)," with ",c(0:(xLevels[k]-1)),sep=""))
 				levels(tmpCovFactor)<-c(0:(xLevels[k]-1))	
-				dataMatrix[,(1+k)]<-tmpCovFactor
-				dataMatrix[,(1+k)]<-as.numeric(levels(dataMatrix[,(1+k)]))[as.integer(dataMatrix[,(1+k)])]
+				dataMatrix[,(k + nStageOne)]<-tmpCovFactor
+				dataMatrix[,(k + nStageOne)]<-as.numeric(levels(dataMatrix[,(k + nStageOne)]))[as.integer(dataMatrix[,(k + nStageOne)])]
 
 			} else {
 				if (!(min(tmpCov,na.rm=TRUE)==0&&max(tmpCov,na.rm=TRUE)==(xLevels[k]-1)&&sum(!is.wholenumber(tmpCov[!is.na(tmpCov)]))==0)) {
-					print(paste("Recoding of covariate ",colnames(dataMatrix)[k+1]," as follows",sep=""))
+					print(paste("Recoding of covariate ",colnames(dataMatrix)[k + nStageOne]," as follows",sep=""))
 					tmpCovFactor<-as.factor(tmpCov)
 					tmpLevels<-levels(tmpCovFactor)
 					print(paste("Replacing level ",levels(tmpCovFactor)," with ",c(0:(xLevels[k]-1)),sep=""))
 					levels(tmpCovFactor)<-c(0:(xLevels[k]-1))	
-					dataMatrix[,(1+k)]<-tmpCovFactor
-					dataMatrix[,(1+k)]<-as.numeric(levels(dataMatrix[,(1+k)]))[as.integer(dataMatrix[,(1+k)])]
+					dataMatrix[,(k + nStageOne)]<-tmpCovFactor
+					dataMatrix[,(k + nStageOne)]<-as.numeric(levels(dataMatrix[,(k + nStageOne)]))[as.integer(dataMatrix[,(k + nStageOne)])]
 				}
 			}
 		}
 	} else 	if (xModel=="Mixed"){
 		xLevels<-vector()
 		for (k in 1:nDiscreteCovs){
-			tmpCov<-dataMatrix[,(1+k)]
+			tmpCov<-dataMatrix[,(k + nStageOne)]
 			xLevels[k]<-length(levels(as.factor(tmpCov)))	
 			if(is.factor(tmpCov)){
-				print(paste("Recoding of covariate number ",colnames(dataMatrix)[k+1]," as follows",sep=""))
+				print(paste("Recoding of covariate number ",colnames(dataMatrix)[k + nStageOne]," as follows",sep=""))
 				tmpCovFactor<-as.factor(tmpCov)
 				tmpLevels<-levels(tmpCovFactor)
 				print(paste("Replacing level ",levels(tmpCovFactor)," with ",c(0:(xLevels[k]-1)),sep=""))
 				levels(tmpCovFactor)<-c(0:(xLevels[k]-1))	
-				dataMatrix[,(1+k)]<-tmpCovFactor
-				dataMatrix[,(1+k)]<-as.numeric(levels(dataMatrix[,(1+k)]))[as.integer(dataMatrix[,(1+k)])]
+				dataMatrix[,(k + nStageOne)]<-tmpCovFactor
+				dataMatrix[,(k + nStageOne)]<-as.numeric(levels(dataMatrix[,(k + nStageOne)]))[as.integer(dataMatrix[,(k + nStageOne)])]
 			} else {
 				if (!(min(tmpCov,na.rm=TRUE)==0&&max(tmpCov,na.rm=TRUE)==(xLevels[k]-1)&&sum(!is.wholenumber(tmpCov[!is.na(tmpCov)]))==0)) {
-					print(paste("Recoding of covariate number ",colnames(dataMatrix)[k+1]," as follows",sep=""))
+					print(paste("Recoding of covariate number ",colnames(dataMatrix)[k + nStageOne]," as follows",sep=""))
 					tmpCovFactor<-as.factor(tmpCov)
 					tmpLevels<-levels(tmpCovFactor)
 					print(paste("Replacing level ",levels(tmpCovFactor)," with ",c(0:(xLevels[k]-1)),sep=""))
 					levels(tmpCovFactor)<-c(0:(xLevels[k]-1))	
-					dataMatrix[,(1+k)]<-tmpCovFactor
-					dataMatrix[,(1+k)]<-as.numeric(levels(dataMatrix[,(1+k)]))[as.integer(dataMatrix[,(1+k)])]
+					dataMatrix[,(k + nStageOne)]<-tmpCovFactor
+					dataMatrix[,(k + nStageOne)]<-as.numeric(levels(dataMatrix[,(k + nStageOne)]))[as.integer(dataMatrix[,(k + nStageOne)])]
 				}
 			}
 		}
@@ -155,10 +156,10 @@ profRegr<-function(covNames, fixedEffectsNames, outcome="outcome", outcomeT=NA, 
 	}
 
 	for (k in 1:nCovariates){
-		missingX<-is.na(dataMatrix[,(k+1)])
+		missingX<-is.na(dataMatrix[,(k+nStageOne)])
 		nMissingX<-sum(missingX)
 		if (nMissingX>0) {
-			dataMatrix[missingX,(k+1)]<- rep(-999,nMissingX)
+			dataMatrix[missingX,(k+nStageOne)]<- rep(-999,nMissingX)
 		}
 	}
 
@@ -198,9 +199,10 @@ profRegr<-function(covNames, fixedEffectsNames, outcome="outcome", outcomeT=NA, 
 		if(!is.na(outcomeT)) stop ("It is only required to set outcomeT for Poisson, Binomial and Survival outcome.")
 	}		
 
+	write(as.character(nStageOne), fileName, ncolumns = 1)
 	# print number of subjects
 	nSubjects <- dim(dataMatrix)[1]
-	write(as.character(nSubjects), fileName,ncolumns=1)
+	write(as.character(nSubjects), fileName, append = TRUE, ncolumns = 1)
 	# print number of covariates and their names
 	write(as.character(nCovariates),fileName,append=T,ncolumns=1)
 	if (xModel=="Mixed"){
