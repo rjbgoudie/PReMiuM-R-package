@@ -732,6 +732,10 @@ class pReMiuMParams{
 			}
 
 			_discreteY.resize(nSubjects);
+
+			// set the initial value of discreteYColumn
+			_discreteYColumn = 1;
+
 			_theta.resize(maxNClusters);
 			for (unsigned int c=0;c<maxNClusters;c++){
 				_theta[c].resize(nCategoriesY);
@@ -914,6 +918,15 @@ class pReMiuMParams{
 
 		void discreteY(const unsigned int& j, const unsigned int& discreteYVal){
 			_discreteY[j]=discreteYVal;
+		}
+
+		/// \brief Get the column of the current discrete Y
+		unsigned int discreteYColumn() const{
+			return _discreteYColumn;
+		}
+
+		void discreteYColumn(const unsigned int& discreteYColumnVal){
+			_discreteYColumn = discreteYColumnVal;
 		}
 
 		/// \brief Return the number of clusters
@@ -1932,6 +1945,7 @@ class pReMiuMParams{
 		pReMiuMParams& operator=(const pReMiuMParams& params){
 			_maxNClusters=params.maxNClusters();
 			_discreteY = params.discreteY();
+			_discreteYColumn = params.discreteYColumn();
 			_logPsi = params.logPsi();
 			_u = params.u();
 			_v = params.v();
@@ -1980,6 +1994,9 @@ class pReMiuMParams{
 
 		/// \brief A vector of the Y data
 		vector<int> _discreteY;
+
+		/// \brief The column of the current Y data
+		unsigned int _discreteYColumn;
 
 		/// \brief Vector of probabilities of assignment to clusters
 		vector<double> _logPsi;
