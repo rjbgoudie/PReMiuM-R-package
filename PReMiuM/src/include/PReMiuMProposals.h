@@ -752,12 +752,56 @@ void metropolisHastingsForDiscreteY(mcmcChain<pReMiuMParams>& chain,
 	mcmcState<pReMiuMParams>& currentState = chain.currentState();
 	pReMiuMParams& currentParams = currentState.parameters();
 	pReMiuMHyperParams hyperParams = currentParams.hyperParams();
-
-	// Find the number of subjects
+	const string& outcomeType = model.dataset().outcomeType();
+	unsigned int nPredictSubjects=dataset.nPredictSubjects();
+	unsigned int maxNClusters=currentParams.maxNClusters();
 	unsigned int nSubjects = dataset.nSubjects();
+	unsigned int nFixedEffects=dataset.nFixedEffects();
+	bool includeResponse = model.options().includeResponse();
+	bool responseExtraVar = model.options().responseExtraVar();
+	const bool includeCAR=model.options().includeCAR();
 
 	unsigned int& nStageOne = dataset.nStageOne();
 	vector<vector<int> >& discreteYStageOne = dataset.discreteYStageOne();
+
+	nTry++;
+
+	double (*logPYiGivenZiWi)(const pReMiuMParams&, const pReMiuMData&,
+												const unsigned int&, const int&,
+												const unsigned int&) = NULL;
+	if (includeResponse){
+		if (!responseExtraVar){
+			if (outcomeType.compare("Bernoulli") == 0){
+				logPYiGivenZiWi = &logPYiGivenZiWiBernoulli;
+			} else if (outcomeType.compare("Binomial") == 0){
+				logPYiGivenZiWi = &logPYiGivenZiWiBinomial;
+			} else if (outcomeType.compare("Poisson") == 0){
+				if (includeCAR){
+					logPYiGivenZiWi = &logPYiGivenZiWiPoissonSpatial;
+				} else {
+					logPYiGivenZiWi = &logPYiGivenZiWiPoisson;
+				}
+			} else if (outcomeType.compare("Normal") == 0){
+				logPYiGivenZiWi = &logPYiGivenZiWiNormal;
+			} else if (outcomeType.compare("Quantile") == 0){
+				logPYiGivenZiWi = &logPYiGivenZiWiQuantile;
+			} else if (outcomeType.compare("Categorical") == 0){
+				logPYiGivenZiWi = &logPYiGivenZiWiCategorical;
+			} else if (outcomeType.compare("Survival") == 0){
+				logPYiGivenZiWi = &logPYiGivenZiWiSurvival;
+			}
+		}
+	}
+
+	double logPyXzCurrent(0.0);
+	for (unsigned int i = 0; i < nSubjects; i++){
+		for (unsigned int c = 0; c < maxNClusters; c++){
+			logPyXzCurrent += logPYiGivenZiWi(currentParams, dataset, nFixedEffects, c, i);
+		}
+	}
+
+	// remember the previous Y column
+	int prev_col = currentParams.discreteYColumn();
 
 	// Define a uniform random number generator
 	randomUniform unifRand(0,1);
@@ -765,28 +809,47 @@ void metropolisHastingsForDiscreteY(mcmcChain<pReMiuMParams>& chain,
 	// Propose a new "column", ie new set of values for Y
 	unsigned int prop_col = (unsigned int)(nStageOne * unifRand(rndGenerator));
 
-	// Still need to calculate the correct MH probability
-	Rprintf("Accepting (incorrectly) with prob 0.36\n");
-	double logAcceptRatio = -1;
+	// switch dataset to the proposal values
+	for (unsigned int i = 0; i < nSubjects; i++){
+		// get value of Y for the ith individual, under the "prop_col"th
+		// stage one
+		int newVal = discreteYStageOne[i][prop_col];
 
+		// set the this as the value in the dataset
+		dataset.discreteY(i, newVal);
+
+		// and as a parameter, to allow monitoring
+		currentParams.discreteY(i, newVal);
+		currentParams.discreteYColumn(prop_col);
+	}
+
+	double logPyXzProposal(0.0);
+	for (unsigned int i = 0; i < nSubjects; i++){
+		for (unsigned int c = 0; c < maxNClusters; c++){
+			logPyXzProposal += logPYiGivenZiWi(currentParams, dataset, nFixedEffects, c, i);
+		}
+	}
+
+	double logAcceptRatio = logPyXzProposal - logPyXzCurrent;
 	if (unifRand(rndGenerator) < exp(logAcceptRatio)){
 		// Move accepted
-
-		for (unsigned int i = 0; i < nSubjects; i++){
-			// get value of Y for the ith individual, under the "prop_col"th
-			// stage one
-			int newVal = discreteYStageOne[i][prop_col];
-
-			// set the this as the value in the dataset
-			dataset.discreteY(i, newVal);
-
-			// and as a parameter, to allow monitoring
-			currentParams.discreteY(i, newVal);
-		}
-
 		nAccept++;
 	} else {
 		// Move rejected, may need to reset parameters if any are changed
+
+		// switch dataset back to the previous values
+		for (unsigned int i = 0; i < nSubjects; i++){
+			// get value of Y for the ith individual, under the "prev_col"th
+			// stage one
+			int prevVal = discreteYStageOne[i][prev_col];
+
+			// set the this as the value in the dataset
+			dataset.discreteY(i, prevVal);
+
+			// and as a parameter, to allow monitoring
+			currentParams.discreteY(i, prevVal);
+			currentParams.discreteYColumn(prev_col);
+		}
 	}
 }
 
