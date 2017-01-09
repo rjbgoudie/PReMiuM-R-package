@@ -734,7 +734,7 @@ class pReMiuMParams{
 			_discreteY.resize(nSubjects);
 
 			// set the initial value of discreteYColumn
-			_discreteYColumn = 1;
+			_discreteYColumn = 0;
 
 			_theta.resize(maxNClusters);
 			for (unsigned int c=0;c<maxNClusters;c++){
