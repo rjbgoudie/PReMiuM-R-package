@@ -108,8 +108,12 @@ RcppExport SEXP profRegr(SEXP inputString) {
 										dataset.nFixedEffects(),dataset.nCategoriesY());
 	pReMiuMSampler.proposalParams(proposalParams);
 
-	// need to add condition for when this is needed
-	pReMiuMSampler.addProposal("metropolisHastingsForDiscreteY",1.0,1,1,&metropolisHastingsForDiscreteY);
+	// If outcome is categorical and more than one Y value is provided
+	// The code might work for outcomes other than Categorical,
+	// but would need to be checked
+	if (options.outcomeType().compare("Categorical") == 0 && dataset.nStageOne() > 1){
+		pReMiuMSampler.addProposal("metropolisHastingsForDiscreteY",1.0,1,1,&metropolisHastingsForDiscreteY);
+	}
 
 	// The gibbs update for the active V
 	pReMiuMSampler.addProposal("gibbsForVActive",1.0,1,1,&gibbsForVActive);
