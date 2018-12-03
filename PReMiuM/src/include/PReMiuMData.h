@@ -314,12 +314,33 @@ class pReMiuMData{
 			_continuousY.insert(_continuousY.begin(),yVec.begin(),yVec.end());
 		}
 
+		/// \brief Set the output vector for the ith subject
+		void continuousY(const unsigned int i, const double val){
+			_continuousY[i] = val;
+		}
+
 		/// \brief Return the output value for the ith subject
 		double continuousY(const unsigned int& i) const{
 			if(i>_nSubjects){
 				throw std::range_error("y subscript i out of range");
 			}
 			return _continuousY[i];
+		}
+
+		/// \brief Return the matrix of stage one samples. That is, a matrix of
+		/// values that are the possible values for the outcome variable Y
+		vector<vector<double> >& continuousYStageOne(){
+			return _continuousYStageOne;
+		}
+
+		/// \brief Return the jth stage one sample for the ith individual
+		double continuousYStageOne(const unsigned int& i, const unsigned int& j) const{
+			return _continuousYStageOne[i][j];
+		}
+
+		/// \brief Set the jth stage one sample for the ith individual
+		void continuousYStageOne(const unsigned int& i,const unsigned int& j,const double& x){
+			_continuousYStageOne[i][j]=x;
 		}
 
 		/// \brief Return the covariate matrix
@@ -579,6 +600,8 @@ class pReMiuMData{
 		/// \brief A vector of the output variables
 		vector<double> _continuousY;
 
+		/// \brief A matrix (vector of vectors) of the stage one samples
+		vector<vector<double> > _continuousYStageOne;
 
 		/// \brief A matrix (vector of vectors) of the covariate data
 		/// \note this is a signed int because missing values are typically stored

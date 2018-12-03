@@ -319,6 +319,7 @@ void importPReMiuMData(const string& fitFilename,const string& predictFilename, 
 	vector<unsigned int>& discreteY=dataset.discreteY();
 	vector<double>& continuousY=dataset.continuousY();
 	vector<vector<int> >& discreteYStageOne=dataset.discreteYStageOne();
+	vector<vector<double> >& continuousYStageOne=dataset.continuousYStageOne();
 	vector<vector<int> >& discreteX=dataset.discreteX();
 	vector<vector<double> >& continuousX=dataset.continuousX();
 	vector<string>& covNames=dataset.covariateNames();
@@ -406,6 +407,7 @@ void importPReMiuMData(const string& fitFilename,const string& predictFilename, 
 	discreteX.resize(nSubjects+nPredictSubjects);
 	continuousX.resize(nSubjects+nPredictSubjects);
 	discreteYStageOne.resize(nSubjects);
+	continuousYStageOne.resize(nSubjects);
 	W.resize(nSubjects);
 	if(outcomeType.compare("Poisson")==0){
 		logOffset.resize(nSubjects);
@@ -422,7 +424,13 @@ void importPReMiuMData(const string& fitFilename,const string& predictFilename, 
 	vector<unsigned int> nXNotMissing(nCovariates,0);
 	for(unsigned int i=0;i<nSubjects;i++){
 		if(outcomeType.compare("Normal")==0||outcomeType.compare("Survival")==0||outcomeType.compare("Quantile")==0){
-			inputFile >> continuousY[i];
+			continuousYStageOne[i].resize(nStageOne);
+			for (unsigned int j=0; j < nStageOne; j++){
+				// set the value of the jth stage one value for the ith individual
+				inputFile >> continuousYStageOne[i][j];
+			}
+			// initialise the outcome variable at the first stage one value
+			continuousY[i] = continuousYStageOne[i][0];
 		}else{
 			discreteYStageOne[i].resize(nStageOne);
 			for (unsigned int j=0; j < nStageOne; j++){
@@ -1664,6 +1672,8 @@ void writePReMiuMOutput(mcmcSampler<pReMiuMParams,pReMiuMOptions,pReMiuMPropPara
 			}
 			fileName = fileStem + "_discreteY.txt";
 			outFiles.push_back(new ofstream(fileName.c_str()));
+			fileName = fileStem + "_continuousY.txt";
+			outFiles.push_back(new ofstream(fileName.c_str()));
 		}
 
 		// File indices
@@ -1674,7 +1684,7 @@ void writePReMiuMOutput(mcmcSampler<pReMiuMParams,pReMiuMOptions,pReMiuMPropPara
 		int rhoOmegaPropInd=-1,gammaInd=-1,nullPhiInd=-1,nullMuInd=-1;
 		int predictThetaRaoBlackwellInd=-1;
 		int TauCARInd=-1,uCARInd=-1;
-		int discreteYInd=-1;
+		int discreteYInd=-1,continuousYInd=-1;
 
 		int r=0;
 		nClustersInd=r++;
@@ -1740,6 +1750,7 @@ void writePReMiuMOutput(mcmcSampler<pReMiuMParams,pReMiuMOptions,pReMiuMPropPara
 			}
 		}
 		discreteYInd=r++;
+		continuousYInd=r++;
 
 		*(outFiles[nClustersInd]) << maxNClusters << endl;
 
@@ -1996,6 +2007,18 @@ void writePReMiuMOutput(mcmcSampler<pReMiuMParams,pReMiuMOptions,pReMiuMPropPara
 				*(outFiles[discreteYInd]) << " ";
 			}else{
 				*(outFiles[discreteYInd]) << endl;
+			}
+		}
+
+		// This is probably not the right place for this - should only be eported
+		// if meaningful. Same for discrete above
+		for(unsigned int i=0;i<nSubjects;i++){
+			double continuousYi = params.continuousY(i);
+			*(outFiles[continuousYInd]) << continuousYi;
+			if(i<nSubjects-1){
+				*(outFiles[continuousYInd]) << " ";
+			}else{
+				*(outFiles[continuousYInd]) << endl;
 			}
 		}
 

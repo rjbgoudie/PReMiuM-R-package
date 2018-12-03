@@ -781,14 +781,8 @@ void metropolisHastingsForDiscreteY(mcmcChain<pReMiuMParams>& chain,
 				} else {
 					logPYiGivenZiWi = &logPYiGivenZiWiPoisson;
 				}
-			} else if (outcomeType.compare("Normal") == 0){
-				logPYiGivenZiWi = &logPYiGivenZiWiNormal;
-			} else if (outcomeType.compare("Quantile") == 0){
-				logPYiGivenZiWi = &logPYiGivenZiWiQuantile;
 			} else if (outcomeType.compare("Categorical") == 0){
 				logPYiGivenZiWi = &logPYiGivenZiWiCategorical;
-			} else if (outcomeType.compare("Survival") == 0){
-				logPYiGivenZiWi = &logPYiGivenZiWiSurvival;
 			}
 		}
 	}
@@ -849,6 +843,108 @@ void metropolisHastingsForDiscreteY(mcmcChain<pReMiuMParams>& chain,
 			// and as a parameter, to allow monitoring
 			currentParams.discreteY(i, prevVal);
 			currentParams.discreteYColumn(prev_col);
+		}
+	}
+}
+
+
+// Metropolis-Hastings for updating Y
+void metropolisHastingsForContinuousY(mcmcChain<pReMiuMParams>& chain,
+									unsigned int& nTry,unsigned int& nAccept,
+									mcmcModel<pReMiuMParams,
+													pReMiuMOptions,
+													pReMiuMData>& model,
+									pReMiuMPropParams& propParams,
+									baseGeneratorType& rndGenerator){
+	pReMiuMData& dataset = model.dataset();
+	mcmcState<pReMiuMParams>& currentState = chain.currentState();
+	pReMiuMParams& currentParams = currentState.parameters();
+	pReMiuMHyperParams hyperParams = currentParams.hyperParams();
+	const string& outcomeType = model.dataset().outcomeType();
+	unsigned int nPredictSubjects=dataset.nPredictSubjects();
+	unsigned int maxNClusters=currentParams.maxNClusters();
+	unsigned int nSubjects = dataset.nSubjects();
+	unsigned int nFixedEffects=dataset.nFixedEffects();
+	bool includeResponse = model.options().includeResponse();
+	bool responseExtraVar = model.options().responseExtraVar();
+	const bool includeCAR=model.options().includeCAR();
+
+	unsigned int& nStageOne = dataset.nStageOne();
+	vector<vector<double> >& continuousYStageOne = dataset.continuousYStageOne();
+
+	nTry++;
+
+	double (*logPYiGivenZiWi)(const pReMiuMParams&, const pReMiuMData&,
+												const unsigned int&, const int&,
+												const unsigned int&) = NULL;
+	if (includeResponse){
+		if (!responseExtraVar){
+			if (outcomeType.compare("Normal") == 0){
+				logPYiGivenZiWi = &logPYiGivenZiWiNormal;
+			} else if (outcomeType.compare("Quantile") == 0){
+				logPYiGivenZiWi = &logPYiGivenZiWiQuantile;
+			} else if (outcomeType.compare("Survival") == 0){
+				logPYiGivenZiWi = &logPYiGivenZiWiSurvival;
+			}
+		}
+	}
+
+	double logPyXzCurrent(0.0);
+	for (unsigned int i = 0; i < nSubjects; i++){
+		for (unsigned int c = 0; c < maxNClusters; c++){
+			logPyXzCurrent += logPYiGivenZiWi(currentParams, dataset, nFixedEffects, c, i);
+		}
+	}
+
+	// remember the previous Y column
+	int prev_col = currentParams.continuousYColumn();
+
+	// Define a uniform random number generator
+	randomUniform unifRand(0,1);
+
+	// Propose a new "column", ie new set of values for Y
+	unsigned int prop_col = (unsigned int)(nStageOne * unifRand(rndGenerator));
+
+	// switch dataset to the proposal values
+	for (unsigned int i = 0; i < nSubjects; i++){
+		// get value of Y for the ith individual, under the "prop_col"th
+		// stage one
+		double newVal = continuousYStageOne[i][prop_col];
+
+		// set the this as the value in the dataset
+		dataset.continuousY(i, newVal);
+
+		// and as a parameter, to allow monitoring
+		currentParams.continuousY(i, newVal);
+		currentParams.continuousYColumn(prop_col);
+	}
+
+	double logPyXzProposal(0.0);
+	for (unsigned int i = 0; i < nSubjects; i++){
+		for (unsigned int c = 0; c < maxNClusters; c++){
+			logPyXzProposal += logPYiGivenZiWi(currentParams, dataset, nFixedEffects, c, i);
+		}
+	}
+
+	double logAcceptRatio = logPyXzProposal - logPyXzCurrent;
+	if (unifRand(rndGenerator) < exp(logAcceptRatio)){
+		// Move accepted
+		nAccept++;
+	} else {
+		// Move rejected, may need to reset parameters if any are changed
+
+		// switch dataset back to the previous values
+		for (unsigned int i = 0; i < nSubjects; i++){
+			// get value of Y for the ith individual, under the "prev_col"th
+			// stage one
+			double prevVal = continuousYStageOne[i][prev_col];
+
+			// set the this as the value in the dataset
+			dataset.continuousY(i, prevVal);
+
+			// and as a parameter, to allow monitoring
+			currentParams.continuousY(i, prevVal);
+			currentParams.continuousYColumn(prev_col);
 		}
 	}
 }
